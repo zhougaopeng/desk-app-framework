@@ -1,0 +1,48 @@
+{
+  "name": "desk-app-framework",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web,desk \"npm run dev -w @desk-framework/server\" \"npm run dev -w @desk-framework/web\" \"wait-on http://localhost:5173 http://localhost:3100/api/health && WEB_DEV=1 npm run dev -w @desk-framework/desk\"",
+    "dev:server": "npm run dev -w @desk-framework/server",
+    "dev:web": "npm run dev -w @desk-framework/web",
+    "build:shared": "npm run build -w @desk-framework/shared",
+    "build:server": "npm run build:shared && npm run build -w @desk-framework/server",
+    "build:server:embed": "npm run build:shared && npm run build:embed -w @desk-framework/server",
+    "build:web": "npm run build:shared && npm run build -w @desk-framework/web",
+    "build:web:zip": "npm run build:shared && npm run build:zip -w @desk-framework/web",
+    "build:desk": "npm run build -w @desk-framework/desk",
+    "package": "npm run build:server:embed && npm run build:web:zip && npm run fetch-frontend -w @desk-framework/desk -- --local ../web/dist --output frontend-dist && CSC_IDENTITY_AUTO_DISCOVERY=false npm run build:desk && CSC_IDENTITY_AUTO_DISCOVERY=false npm run package -w @desk-framework/desk",
+    "package:local": "npm run build:server:embed && npm run build:web:zip && npm run fetch-frontend -w @desk-framework/desk -- --local ../web/dist --output frontend-dist && CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_LOCAL_PACKAGE=1 npm run build:desk && CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_LOCAL_PACKAGE=1 npm run package -w @desk-framework/desk",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "lint:fix": "biome check --fix .",
+    "format": "biome format --fix .",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "biome check --fix --no-errors-on-unmatched",
+      "biome format --fix --no-errors-on-unmatched"
+    ],
+    "*.{json,css}": [
+      "biome format --fix --no-errors-on-unmatched"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
+    "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "vitest": "^4.1.2",
+    "wait-on": "^8.0.3"
+  }
+}

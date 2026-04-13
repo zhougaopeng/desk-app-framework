@@ -1,0 +1,31 @@
+{
+  "name": "@desk-framework/server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "build": "tsup",
+    "build:embed": "tsup --config tsup.config.embed.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@desk-framework/shared": "*",
+    "@hono/node-server": "^1.19.14",
+    "conf": "^13.0.1",
+    "hono": "^4.12.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.2"
+  }
+}

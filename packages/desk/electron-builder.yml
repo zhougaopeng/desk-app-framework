@@ -1,0 +1,27 @@
+appId: com.desk-framework.app
+productName: Desk App
+electronVersion: "37.10.3"
+directories:
+  buildResources: build
+files:
+  - "out/**/*"
+  - "!src/*"
+  - "!electron.vite.config.*"
+  - "!{tsconfig.json,tsconfig.node.json}"
+extraResources:
+  - from: frontend-dist
+    to: frontend-dist
+    filter:
+      - "**/*"
+mac:
+  identity: "-"
+  target:
+    - dmg
+    - zip
+  artifactName: "desk-app-${version}-${arch}.${ext}"
+
+publish:
+  provider: github
+  owner: your-org
+  repo: your-repo
+  releaseType: release

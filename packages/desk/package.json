@@ -1,0 +1,33 @@
+{
+  "name": "@desk-framework/desk",
+  "version": "1.0.0",
+  "description": "Desk App Framework - Electron desktop application shell",
+  "private": true,
+  "main": "out/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "prepackage": "rm -rf dist",
+    "package": "electron-builder --config electron-builder.yml",
+    "fetch-frontend": "tsx ../../scripts/fetch-frontend.mts"
+  },
+  "dependencies": {
+    "@desk-framework/server": "*",
+    "@desk-framework/shared": "*",
+    "electron-updater": "^6.8.3",
+    "extract-zip": "^2.0.1",
+    "hono": "^4.12.12"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^22.0.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^37.1.2",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^5.0.0",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.2"
+  }
+}

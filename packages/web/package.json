@@ -1,0 +1,30 @@
+{
+  "name": "@desk-framework/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:zip": "vite build --mode zip",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@desk-framework/shared": "*",
+    "@fontsource-variable/geist": "^5.2.8",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/archiver": "^7.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "archiver": "^7.0.1",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2",
+    "vite": "^7.3.2"
+  }
+}

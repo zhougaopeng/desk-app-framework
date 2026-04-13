@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*" # v* tag → 全量编译和发布（web + desk/electron）
+      - "w*" # w* tag → 仅编译和发布 web zip + version.json
+
+  workflow_dispatch: # 手动触发 → 选择性发布
+    inputs:
+      tag:
+        description: "上传到哪个 Release（如 v1.0.0，Release 需已存在）"
+        required: true
+        type: string
+      build_web:
+        description: "发布 web.zip + version.json"
+        type: boolean
+        default: false
+      build_desk:
+        description: "发布 macOS 桌面应用"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # ── 1. 计算本次实际需要构建的内容 ─────────────────────────
+      # v* → 全量；w* → 仅 web；workflow_dispatch → 按输入
+      - name: Compute build flags
+        id: flags
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            REF="${{ github.ref_name }}"
+            case "$REF" in
+              v*)
+                echo "web=true"   >> $GITHUB_OUTPUT
+                echo "desk=true"  >> $GITHUB_OUTPUT
+                ;;
+              w*)
+                echo "web=true"   >> $GITHUB_OUTPUT
+                echo "desk=false" >> $GITHUB_OUTPUT
+                ;;
+            esac
+            echo "tag=$REF" >> $GITHUB_OUTPUT
+          else
+            echo "web=${{ inputs.build_web }}"    >> $GITHUB_OUTPUT
+            echo "desk=${{ inputs.build_desk }}"   >> $GITHUB_OUTPUT
+            echo "tag=${{ inputs.tag }}"           >> $GITHUB_OUTPUT
+          fi
+
+      - name: Show build plan
+        run: |
+          echo "▶ trigger   : ${{ github.event_name }}"
+          echo "▶ tag       : ${{ steps.flags.outputs.tag }}"
+          echo "▶ build_web  : ${{ steps.flags.outputs.web }}"
+          echo "▶ build_desk : ${{ steps.flags.outputs.desk }}"
+
+      # ── 2. 公共步骤 ────────────────────────────────────────────
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build shared package
+        run: npm run build -w @desk-framework/shared
+
+      # ── 3. Web 构建 ────────────────────────────────────────────
+      # build_web=true  → 构建并发布 web.zip + version.json
+      # build_desk=true (build_web=false) → 也需要构建 web dist 供 desk 使用，但不发布
+      - name: Build web
+        if: steps.flags.outputs.web == 'true' || steps.flags.outputs.desk == 'true'
+        run: npm run build:web:zip
+
+      # ── 4. Desk (Electron) 构建 ───────────────────────────────
+      - name: Sync version from tag to desk package.json
+        if: steps.flags.outputs.desk == 'true'
+        run: |
+          TAG="${{ steps.flags.outputs.tag }}"
+          VERSION="${TAG#v}"
+          echo "Setting desk package version to $VERSION"
+          node -e "const f='packages/desk/package.json';const p=JSON.parse(require('fs').readFileSync(f,'utf8'));p.version='$VERSION';require('fs').writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
+          head -5 packages/desk/package.json
+
+      - name: Build server (embed into desk)
+        if: steps.flags.outputs.desk == 'true'
+        run: npm run build:server:embed
+
+      - name: Copy frontend dist into desk package
+        if: steps.flags.outputs.desk == 'true'
+        run: npm run fetch-frontend -w @desk-framework/desk -- --local ../web/dist --output frontend-dist
+
+      - name: Build desk
+        if: steps.flags.outputs.desk == 'true'
+        run: npm run build:desk
+        env:
+          FRONTEND_BUNDLE_URL: ${{ secrets.FRONTEND_BUNDLE_URL }}
+
+      # ── 5. 创建 Release 并上传产物 ──────────────────────────────
+      - name: Ensure GitHub Release exists
+        if: steps.flags.outputs.web == 'true' || steps.flags.outputs.desk == 'true'
+        run: |
+          TAG="${{ steps.flags.outputs.tag }}"
+          if ! gh release view "$TAG" &>/dev/null; then
+            echo "Creating release $TAG..."
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          else
+            echo "Release $TAG already exists."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package & publish macOS app to GitHub Release
+        if: steps.flags.outputs.desk == 'true'
+        run: npm run package -w @desk-framework/desk -- --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload web zip to GitHub Release
+        if: steps.flags.outputs.web == 'true'
+        run: |
+          VERSION_JSON=packages/web/release/version.json
+          ZIP_NAME=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('./$VERSION_JSON','utf8')).zipFileName)")
+          ZIP=packages/web/release/$ZIP_NAME
+          test -f "$ZIP" || { echo "❌ zip not found: $ZIP"; exit 1; }
+          echo "Uploading $ZIP"
+          gh release upload "${{ steps.flags.outputs.tag }}" "$ZIP" "$VERSION_JSON" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
