@@ -7,16 +7,27 @@ export interface Api {
   };
 }
 
+async function assertOk(res: Response): Promise<Response> {
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Request failed (${res.status})${body ? `: ${body}` : ""}`);
+  }
+  return res;
+}
+
 export function createApi(fetchFn: FetchFn = createFetch()): Api {
   return {
     settings: {
-      get: () => fetchFn("/settings").then((r) => r.json()) as Promise<Record<string, unknown>>,
+      get: () =>
+        fetchFn("/settings")
+          .then(assertOk)
+          .then((r) => r.json()) as Promise<Record<string, unknown>>,
       set: (key, value) =>
         fetchFn("/settings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key, value }),
-        }).then(() => {}),
+        }).then(assertOk).then(() => {}),
     },
   };
 }

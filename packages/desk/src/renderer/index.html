@@ -125,20 +125,18 @@
       const bar = document.getElementById("progressBar");
       const text = document.getElementById("statusText");
 
-      if (window.electronAPI?.splash) {
-        window.electronAPI.splash.onStatus((status) => {
-          if (text) text.textContent = status.message;
+      const off = window.electronAPI?.ipc?.on("splash:status", (status) => {
+        if (text) text.textContent = status.message;
 
-          if (!bar) return;
-          if (status.progress >= 0) {
-            bar.classList.remove("indeterminate");
-            bar.style.width = `${Math.round(status.progress * 100)}%`;
-          } else {
-            bar.classList.add("indeterminate");
-            bar.style.width = "40%";
-          }
-        });
-      }
+        if (!bar) return;
+        if (status.progress >= 0) {
+          bar.classList.remove("indeterminate");
+          bar.style.width = `${Math.round(status.progress * 100)}%`;
+        } else {
+          bar.classList.add("indeterminate");
+          bar.style.width = "40%";
+        }
+      });
     </script>
   </body>
 </html>

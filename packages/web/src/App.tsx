@@ -6,18 +6,48 @@ import { api, isElectron } from "@/api/adapter";
 function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSettings = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    api.settings
+      .get()
+      .then((s) => {
+        setSettings(s);
+      })
+      .catch((err) => {
+        console.error("Failed to load settings:", err);
+        setError(err instanceof Error ? err.message : "Failed to load settings");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
-    api.settings.get().then((s) => {
-      setSettings(s);
-      setLoading(false);
-    });
-  }, []);
+    fetchSettings();
+  }, [fetchSettings]);
 
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-muted-foreground">Loading settings...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3">
+        <p className="text-destructive text-sm">{error}</p>
+        <button
+          type="button"
+          onClick={fetchSettings}
+          className="rounded-lg bg-primary px-4 py-1.5 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          Retry
+        </button>
       </div>
     );
   }

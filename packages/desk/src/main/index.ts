@@ -1,17 +1,21 @@
-import { createApp, type CreateAppOptions } from "@desk-framework/server";
-import {
-  APP_DISPLAY_NAME,
-  UI_ORIGIN,
-  UI_PROTOCOL,
-  WEB_DEV_URL,
-} from "@desk-framework/shared";
+import { type CreateAppOptions, createApp } from "@desk-framework/server";
+import { APP_DISPLAY_NAME, UI_ORIGIN, UI_PROTOCOL, WEB_DEV_URL } from "@desk-framework/shared";
 import { app, protocol } from "electron";
 import { setupUiProtocol } from "./protocol";
 import { setupRoutes } from "./routes/setup";
 import { initAppUpdater } from "./updater/app-updater";
 import { checkForUpdate, downloadUpdate, loadSplash } from "./updater/frontend-loader";
-import { getTargetFrontendVersion } from "./util";
+import {
+  cleanupOldVersions,
+  getTargetFrontendVersion,
+  isUserFrontendDir,
+  type VersionJson,
+} from "./util";
 import { createMainWindow } from "./window";
+
+function keepHashForCleanup(target: VersionJson): string | null {
+  return isUserFrontendDir(target.frontendDir) ? target.hash : null;
+}
 
 // ── 应用配置（模板使用者按需修改） ─────────────────────────
 
@@ -94,9 +98,22 @@ app.whenReady().then(async () => {
           console.error("[desk] Initial download failed:", err);
         });
         targetFrontendVersion = getTargetFrontendVersion();
+        if (targetFrontendVersion) {
+          await cleanupOldVersions(keepHashForCleanup(targetFrontendVersion));
+        }
         justDownloaded = true;
       }
     }
+  }
+
+  if (!targetFrontendVersion) {
+    mainWindow.webContents.send("splash:status", {
+      stage: "loading",
+      message: "无法加载应用，请检查网络后重启。",
+      progress: -1,
+    });
+    console.error("[desk] No frontend available after all attempts.");
+    return;
   }
 
   mainWindow.loadURL(`${UI_ORIGIN}/`);
@@ -108,9 +125,23 @@ app.whenReady().then(async () => {
 
         console.log(`[desk] Downloading frontend update ${update.version}...`);
         await downloadUpdate(update);
-        targetFrontendVersion = getTargetFrontendVersion();
 
-        mainWindow.webContents.send("frontend:update-ready", { version: update.version });
+        const newVersion = getTargetFrontendVersion();
+        if (!newVersion) return;
+
+        targetFrontendVersion = newVersion;
+
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.once("did-finish-load", () => {
+            cleanupOldVersions(keepHashForCleanup(newVersion)).catch((err) => {
+              console.error("[desk] Old version cleanup failed:", err);
+            });
+          });
+          mainWindow.webContents.send("frontend:update-ready", { version: update.version });
+        } else {
+          await cleanupOldVersions(keepHashForCleanup(newVersion));
+        }
+
         console.log(`[desk] Frontend update ready: ${update.version}`);
       })
       .catch((err) => {

@@ -16,6 +16,15 @@ function send(channel: string, data?: unknown): void {
   mainWindow?.webContents.send(channel, data);
 }
 
+function getParentWindow(): BrowserWindow | undefined {
+  return mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
+}
+
+function showDialog(options: Electron.MessageBoxOptions): Promise<Electron.MessageBoxReturnValue> {
+  const parent = getParentWindow();
+  return parent ? dialog.showMessageBox(parent, options) : dialog.showMessageBox(options);
+}
+
 function openReleasePage(version: string): void {
   shell.openExternal(`${releaseUrl}/tag/v${version}`);
 }
@@ -93,19 +102,17 @@ export function initAppUpdater(
       checkForUpdatesMenuItem.click = () => openReleasePage(info.version);
     }
 
-    dialog
-      .showMessageBox({
-        type: "info",
-        title: "Update Available",
-        message: `A new version is available: v${info.version}`,
-        detail: 'Click "Download" to open the download page.',
-        buttons: ["Download", "Later"],
-        defaultId: 0,
-        cancelId: 1,
-      })
-      .then(({ response }) => {
-        if (response === 0) openReleasePage(info.version);
-      });
+    showDialog({
+      type: "info",
+      title: "Update Available",
+      message: `A new version is available: v${info.version}`,
+      detail: 'Click "Download" to open the download page.',
+      buttons: ["Download", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+    }).then(({ response }) => {
+      if (response === 0) openReleasePage(info.version);
+    });
   });
 
   autoUpdater.on("update-not-available", (info: UpdateInfo) => {
@@ -117,7 +124,7 @@ export function initAppUpdater(
     }
     if (isManualCheck) {
       isManualCheck = false;
-      dialog.showMessageBox({
+      showDialog({
         type: "info",
         title: "No Updates Available",
         message: "You're up to date!",
