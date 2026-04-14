@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "Desk App Framework - Electron desktop application shell",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhougaopeng/desk-app-framework.git"
+  },
   "main": "out/main/index.js",
   "type": "module",
   "scripts": {

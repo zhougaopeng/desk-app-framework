@@ -22,6 +22,4 @@ mac:
 
 publish:
   provider: github
-  owner: zhougaopeng
-  repo: desk-app-framework
   releaseType: release
