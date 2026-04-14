@@ -12,6 +12,7 @@ import path from "node:path";
 import archiver from "archiver";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { v7 as uuidv7 } from "uuid";
 import { type Plugin, defineConfig } from "vite";
 
 function contentHash(distDir: string): string {
@@ -38,7 +39,7 @@ function buildRelease(): Plugin {
       const distDir = path.resolve(__dirname, "dist");
       const releaseDir = path.resolve(__dirname, "release");
       const short = contentHash(distDir);
-      const version = crypto.randomUUID();
+      const version = uuidv7();
       const zipName = `web-${short}.zip`;
       const versionInfo = { hash: short, zipFileName: zipName, version };
 

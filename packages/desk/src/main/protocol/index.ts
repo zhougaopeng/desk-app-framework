@@ -16,6 +16,12 @@ export function setupUiProtocol(getFrontendDir: () => string | undefined) {
       return new Response("Frontend not found", { status: 404 });
     }
 
-    return net.fetch(`file://${path.join(frontendDir, pathname)}`);
+    const resolved = path.resolve(path.join(frontendDir, pathname));
+    const normalizedBase = path.resolve(frontendDir);
+    if (!resolved.startsWith(`${normalizedBase}${path.sep}`) && resolved !== normalizedBase) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    return net.fetch(`file://${resolved}`);
   });
 }

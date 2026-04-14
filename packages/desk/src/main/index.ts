@@ -108,6 +108,7 @@ app.whenReady().then(async () => {
 
         console.log(`[desk] Downloading frontend update ${update.version}...`);
         await downloadUpdate(update);
+        targetFrontendVersion = getTargetFrontendVersion();
 
         mainWindow.webContents.send("frontend:update-ready", { version: update.version });
         console.log(`[desk] Frontend update ready: ${update.version}`);

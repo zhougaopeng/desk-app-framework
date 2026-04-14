@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { APP_SLUG } from "@desk-framework/shared";
 import { app, type BrowserWindow, net } from "electron";
@@ -141,14 +141,26 @@ export async function downloadUpdate(
   report("extracting", "正在安装更新...", -1);
 
   const targetDir = getFrontendDir();
-  await rm(targetDir, { recursive: true, force: true });
-  await mkdir(targetDir, { recursive: true });
+  const stagingDir = `${targetDir}-staging`;
+  const backupDir = `${targetDir}-old`;
+
+  await rm(stagingDir, { recursive: true, force: true });
+  await mkdir(stagingDir, { recursive: true });
 
   try {
-    await extract(tmpZip, { dir: targetDir });
+    await extract(tmpZip, { dir: stagingDir });
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }
+
+  await rm(backupDir, { recursive: true, force: true });
+  try {
+    await rename(targetDir, backupDir);
+  } catch {
+    // targetDir may not exist on first install
+  }
+  await rename(stagingDir, targetDir);
+  await rm(backupDir, { recursive: true, force: true }).catch(() => {});
 
   console.log(`${TAG} Updated to ${info.version}`);
 }

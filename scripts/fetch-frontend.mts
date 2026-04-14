@@ -2,6 +2,7 @@
 
 import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { createWriteStream } from "node:fs";
+import { tmpdir } from "node:os";
 import { pipeline } from "node:stream/promises";
 import { join, resolve } from "node:path";
 import { execSync } from "node:child_process";
@@ -21,8 +22,7 @@ const outputDir = resolve(values.output!);
 async function fetchFromUrl(url: string) {
   console.log(`Downloading frontend from ${url}...`);
 
-  const tmpFile = join(outputDir, ".tmp-frontend.tar.gz");
-  mkdirSync(outputDir, { recursive: true });
+  const tmpFile = join(tmpdir(), ".desk-frontend.tar.gz");
 
   const response = await fetch(url);
   if (!response.ok || !response.body) {
