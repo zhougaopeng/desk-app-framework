@@ -22,6 +22,6 @@ mac:
 
 publish:
   provider: github
-  owner: your-org
-  repo: your-repo
+  owner: zhougaopeng
+  repo: desk-app-framework
   releaseType: release

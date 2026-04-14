@@ -102,8 +102,6 @@ jobs:
       - name: Build desk
         if: steps.flags.outputs.desk == 'true'
         run: npm run build:desk
-        env:
-          FRONTEND_BUNDLE_URL: ${{ secrets.FRONTEND_BUNDLE_URL }}
 
       # ── 5. 创建 Release 并上传产物 ──────────────────────────────
       - name: Ensure GitHub Release exists

@@ -15,8 +15,6 @@ import { createMainWindow } from "./window";
 
 // ── 应用配置（模板使用者按需修改） ─────────────────────────
 
-const RELEASE_URL = ""; // GitHub release page URL，留空则禁用手动更新入口
-
 const defaultSettings = {
   example: {
     greeting: `Hello from ${APP_DISPLAY_NAME}!`,
@@ -67,7 +65,7 @@ app.whenReady().then(async () => {
 
   setupRoutes(serverApp);
 
-  initAppUpdater(mainWindow, APP_DISPLAY_NAME, RELEASE_URL || undefined);
+  initAppUpdater(mainWindow, APP_DISPLAY_NAME, process.env.RELEASE_URL);
 
   const isLocalPackage = !!process.env.ELECTRON_LOCAL_PACKAGE;
   let justDownloaded = false;
