@@ -1,6 +1,6 @@
 {
   "name": "@desk-framework/desk",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Desk App Framework - Electron desktop application shell",
   "private": true,
   "main": "out/main/index.js",
