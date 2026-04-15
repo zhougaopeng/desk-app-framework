@@ -1,6 +1,6 @@
 appId: com.desk-framework.app
 productName: Desk App
-electronVersion: "37.10.3"
+electronVersion: "41.2.0"
 directories:
   buildResources: build
 files:
