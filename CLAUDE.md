@@ -90,6 +90,7 @@ src/
 src/
 ├── App.tsx        # Main application component
 ├── main.tsx       # Entry point
+├── env.d.ts       # Vite/Electron environment type declarations
 ├── api/
 │   ├── api.ts     # API client
 │   ├── adapter.ts # ApiAdapter: auto-detect Electron vs HTTP mode

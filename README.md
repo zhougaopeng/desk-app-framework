@@ -15,7 +15,7 @@
 | 层级 | 技术 |
 |------|------|
 | 运行时 | Node.js ≥ 22.13.0, TypeScript |
-| 桌面 | Electron 37, electron-vite, electron-builder |
+| 桌面 | Electron 41, electron-vite, electron-builder |
 | 后端 | Hono, conf (持久化存储) |
 | 前端 | React 19, Vite 7, Tailwind CSS v4 |
 | 质量 | Biome (lint + format), Vitest, Husky + lint-staged |
